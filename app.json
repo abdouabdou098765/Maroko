@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Maroko",
+    "slug": "maroko",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0D12",
+    "splash": {
+      "image": "./icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0D12"
+    },
+    "android": {
+      "package": "com.maroko.agenda",
+      "adaptiveIcon": {
+        "foregroundImage": "./adaptive-icon.png",
+        "backgroundColor": "#0B0D12"
+      },
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./notification-icon.png",
+          "color": "#D4A24C"
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "ماروكو كيحتاج الميكروفون باش يسمعك.",
+          "speechRecognitionPermission": "ماروكو كيحتاج التعرف على الصوت باش يفهمك.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ]
+    ]
+  }
+}
