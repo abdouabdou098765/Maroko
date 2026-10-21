@@ -6,21 +6,34 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
+
+// تحميل الصوت بأمان: إلا فشل، التطبيق كيبقى خدام بالكتابة
+let ExpoSpeechRecognitionModule = null;
+let useSpeechRecognitionEvent = () => {};
+let speechLoadError = null;
+try {
+  const m = require('expo-speech-recognition');
+  ExpoSpeechRecognitionModule = m.ExpoSpeechRecognitionModule;
+  useSpeechRecognitionEvent = m.useSpeechRecognitionEvent;
+} catch (e) {
+  speechLoadError = String(e && e.message ? e.message : e);
+}
 import { parseCommand } from './parser';
 
 const KEY = 'maroko.items.v1';
 const CHANNEL = 'reminders';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+} catch (e) {}
 
 const DAY_NAMES = ['الحد', 'التنين', 'التلات', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const pad = (n) => String(n).padStart(2, '0');
@@ -81,7 +94,7 @@ const EXAMPLES = [
   'زيد لي نشري الحليب',
 ];
 
-export default function App() {
+function MainApp() {
   const [items, setItems] = useState([]);
   const [text, setText] = useState('');
   const [ready, setReady] = useState(false);
@@ -148,6 +161,10 @@ export default function App() {
   });
 
   const toggleMic = useCallback(async () => {
+    if (!ExpoSpeechRecognitionModule) {
+      Alert.alert('الصوت ما خداماش', 'ماقدرناش نحملو الصوت: ' + (speechLoadError || 'غير معروف') + '\nتقدر تكتب عادي.');
+      return;
+    }
     if (listening) {
       ExpoSpeechRecognitionModule.stop();
       return;
@@ -311,3 +328,31 @@ const s = StyleSheet.create({
   micText: { color: '#fff', fontSize: 20 },
   sendText: { color: '#0B0D12', fontSize: 26, fontWeight: '700', marginTop: -2 },
 });
+
+
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { err: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  render() {
+    if (this.state.err) {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#0B0D12', padding: 24, justifyContent: 'center' }}>
+          <Text style={{ color: '#D4A24C', fontSize: 22, marginBottom: 12, textAlign: 'center' }}>وقع خطأ فماروكو</Text>
+          <Text style={{ color: '#F2F4F8', fontSize: 14 }} selectable>
+            {String(this.state.err && this.state.err.stack ? this.state.err.stack : this.state.err).slice(0, 1200)}
+          </Text>
+          <Text style={{ color: '#9AA3B5', marginTop: 16, textAlign: 'center' }}>صور هاد الشاشة وصيفطها ليا</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
+}
